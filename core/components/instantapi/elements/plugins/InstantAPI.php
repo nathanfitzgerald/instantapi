@@ -9,6 +9,7 @@
  * @ author Aaron Ladage
  * @ version 1.0.0 - August 8, 2012
  *
+ * Save as a plugin, and check the OnPageNotFound system event.
 **/
 
 /* Set parameters */
