@@ -9,7 +9,7 @@ Installation
 
 
 Usage
-2. Visit any page on your site, and add ".json" to the end of the URL. The page will return a JSON-formatted string containing all of the page's data.
+1. Visit any page on your site, and add ".json" to the end of the URL. The page will return a JSON-formatted string containing all of the page's data.
 
 
 Roadmap/Wishlist
