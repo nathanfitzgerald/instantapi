@@ -18,7 +18,7 @@ $cleanedUri = str_replace(array('.json'),'',$uri);
 $cleanedUri = preg_replace('/\?.*/', '', $cleanedUri);
 $error_page = $modx->getOption('error_page');
 
-if (($extension != 'ico') && ($extension == json)) {
+if (($extension != 'ico') && ($extension == 'json')) {
     $page = $modx->getObject('modResource',array('uri' => $cleanedUri));
     if ($page) {
         $fields = $page->toArray();
