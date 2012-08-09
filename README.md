@@ -13,5 +13,5 @@ Usage
 
 
 Roadmap/Wishlist
-Fix problem with tags in the content area not being parsed before JSONification (help me, Hamstra-wan Kenobi, you're my only hope)
-Add support for template variable content
+1. Fix problem with tags in the content area not being parsed before JSONification (help me, Hamstra-wan Kenobi, you're my only hope)
+2. Add support for template variable content
