@@ -2,3 +2,4 @@ Changelog
 
 v1.0.0 - Initial version
 v1.0.1 - Rewrite of the base code; first repo release
+v1.0.2 - added parsing of fields and caching
