@@ -49,6 +49,7 @@ switch($eventName) {
 		    	if ($fields) { // cached version available
 		    	
 		    		$fields['instantAPI'] = "cached";
+		    		$modx->resource =& $page;
 		    	
 		    	} else { // no cached version available
 		    	
