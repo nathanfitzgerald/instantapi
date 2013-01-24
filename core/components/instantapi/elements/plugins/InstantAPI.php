@@ -28,8 +28,9 @@ switch($eventName) {
 		$uri_array = parse_url($uri);
 		$error_page = $modx->getOption('error_page'); // Get the error page
 		$parseContent = $modx->getOption('instantapi.parse_content', $scriptProperties, true);
-		$parseAllFields = $modx->getOption('instantapi.parse_all_fields', $scriptProperties, false);
+		$parseAllFields = $modx->getOption('instantapi.parse_all_fields', $scriptProperties, true);
 		$cacheExpireTime = $modx->getOption('instantapi.cache_expire_time', $scriptProperties, 0);
+		$maxIterations= (integer) $modx->getOption('parser_max_iterations', null, 10);
 		
 		if (isset($uri_array['path']) && preg_match('/\.json$/i',$uri_array['path'])) {
 		    $cleanedUri = str_replace(array('.json','/'),'',$uri); 
@@ -39,10 +40,18 @@ switch($eventName) {
 		    
 		    	$cacheKey = "instantapi/" . $cleanedUri;
 		    	
-		    	// get json from cache
-		    	$json = $modx->cacheManager->get($cacheKey);
+		    	// check if resource is cacheable
+		    	if ($page->get('cacheable')) {
+			    	// get $fields from cache
+			    	$fields = $modx->cacheManager->get($cacheKey);
+		    	}
 		    	
-		    	if (!$json) { // if no cached version is available
+		    	if ($fields) { // cached version available
+		    	
+		    		$fields['instantAPI'] = "cached";
+		    		$modx->resource =& $page;
+		    	
+		    	} else { // no cached version available
 		    	
 			        $fields = $page->toArray();
 			        
@@ -51,36 +60,53 @@ switch($eventName) {
 			            foreach ($fields as $key => $value) {
 			                if ($key == 'content') continue;
 			                // Parse all cached tags
-			                $modx->parser->processElementTags('', $value, true, false, '[[', ']]', array(), 10);
-			                // Parse all uncached tags
-			                $modx->parser->processElementTags('', $value, true, true, '[[', ']]', array(), 10);
-			                // Put the value back
-			                $fields[$key] = $value;
-			
+			                $modx->parser->processElementTags('', $fields[$key], false, false, '[[', ']]', array(), $maxIterations);
 			            }
 			        }
 			        
 			        // parse content
 			        if ($parseContent) {
 			            // Parse all cached tags
-			            $modx->parser->processElementTags('', $fields['content'], true, false, '[[', ']]', array(), 10);
-			            // Parse all uncached tags
-			            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), 10);
+			            $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), $maxIterations);
 			        }
 			        
-			        $json = $modx->toJSON($fields);
 			        
-			        // put $json in the modx cache
-			        $modx->cacheManager->set($cacheKey,$json,$cacheExpireTime);
+			        // put $fields in the modx cache
+			        $modx->cacheManager->set($cacheKey,$fields,$cacheExpireTime);
+			        
+			        // add "uncached" value, since current output is uncached
+			        $fields['instantAPI'] = "uncached";
 		    	}
 		        
+		       
+		        // Parse uncached tags in all fields and content
+		        if ($parseAllFields) {
+		            foreach ($fields as $key => $value) {
+		                if ($key == 'content') continue;
+		                $modx->parser->processElementTags('', $fields[$key], true, true, '[[', ']]', array(), $maxIterations);
+		            }
+		        }
+		        if ($parseContent) {
+		            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), $maxIterations);
+		        }
+			        
+			            
+		        $mtime= microtime();
+		        $mtime= explode(" ", $mtime);
+				$mtime= $mtime[1] + $mtime[0];
+				$tsum= round(($mtime - $modx->startTime) * 1000, 0) . " ms";
+				
+				$fields['rendertime'] = $tsum;
+		        
+		        $json = $modx->toJSON($fields);
 		        session_write_close();
 		        die($json);
 		    }
 		    else {
 		        $modx->sendForward($error_page);
 		    }
-		}		break;
+		}
+		break;
 	
 	
 	
