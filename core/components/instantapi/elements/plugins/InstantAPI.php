@@ -39,10 +39,16 @@ switch($eventName) {
 		    
 		    	$cacheKey = "instantapi/" . $cleanedUri;
 		    	
-		    	// get json from cache
-		    	$json = $modx->cacheManager->get($cacheKey);
+		    	if ($page->get('cacheable')) {
+			    	// get $fields from cache
+			    	$fields = $modx->cacheManager->get($cacheKey);
+		    	}
 		    	
-		    	if (!$json) { // if no cached version is available
+		    	if ($fields) { // cached version available
+		    	
+		    		$fields['instantAPI'] = "cached";
+		    	
+		    	} else { // if no cached version is available
 		    	
 			        $fields = $page->toArray();
 			        
@@ -51,9 +57,9 @@ switch($eventName) {
 			            foreach ($fields as $key => $value) {
 			                if ($key == 'content') continue;
 			                // Parse all cached tags
-			                $modx->parser->processElementTags('', $value, true, false, '[[', ']]', array(), 10);
+			                $modx->parser->processElementTags('', $value, false, false, '[[', ']]', array(), 10);
 			                // Parse all uncached tags
-			                $modx->parser->processElementTags('', $value, true, true, '[[', ']]', array(), 10);
+			                //$modx->parser->processElementTags('', $value, true, true, '[[', ']]', array(), 10);
 			                // Put the value back
 			                $fields[$key] = $value;
 			
@@ -63,17 +69,42 @@ switch($eventName) {
 			        // parse content
 			        if ($parseContent) {
 			            // Parse all cached tags
-			            $modx->parser->processElementTags('', $fields['content'], true, false, '[[', ']]', array(), 10);
+			            $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), 10);
 			            // Parse all uncached tags
-			            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), 10);
+			            //$modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), 10);
 			        }
 			        
-			        $json = $modx->toJSON($fields);
 			        
-			        // put $json in the modx cache
-			        $modx->cacheManager->set($cacheKey,$json,$cacheExpireTime);
+			        
+			        // put $fields in the modx cache
+			        $modx->cacheManager->set($cacheKey,$fields,$cacheExpireTime);
+			        
+			        $fields['instantAPI'] = "uncached";
 		    	}
 		        
+		       
+		        // Parse uncached tags in all fields and content
+		        if ($parseAllFields) {
+		            foreach ($fields as $key => $value) {
+		                if ($key == 'content') continue;
+		                $modx->parser->processElementTags('', $value, true, true, '[[', ']]', array(), 10);
+		                // Put the value back
+		                $fields[$key] = $value;
+		            }
+		        }
+		        if ($parseContent) {
+		            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), 10);
+		        }
+			        
+			            
+		        $mtime= microtime();
+		        $mtime= explode(" ", $mtime);
+				$mtime= $mtime[1] + $mtime[0];
+				$tsum= round(($mtime - $modx->startTime) * 1000, 0) . " ms";
+				
+				$fields['rendertime'] = $tsum;
+		        
+		        $json = $modx->toJSON($fields);
 		        session_write_close();
 		        die($json);
 		    }
