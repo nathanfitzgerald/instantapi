@@ -30,6 +30,7 @@ switch($eventName) {
 		$parseContent = $modx->getOption('instantapi.parse_content', $scriptProperties, true);
 		$parseAllFields = $modx->getOption('instantapi.parse_all_fields', $scriptProperties, true);
 		$cacheExpireTime = $modx->getOption('instantapi.cache_expire_time', $scriptProperties, 0);
+		$maxIterations= (integer) $modx->getOption('parser_max_iterations', null, 10);
 		
 		if (isset($uri_array['path']) && preg_match('/\.json$/i',$uri_array['path'])) {
 		    $cleanedUri = str_replace(array('.json','/'),'',$uri); 
@@ -58,14 +59,14 @@ switch($eventName) {
 			            foreach ($fields as $key => $value) {
 			                if ($key == 'content') continue;
 			                // Parse all cached tags
-			                $modx->parser->processElementTags('', $fields[$key], false, false, '[[', ']]', array(), 10);
+			                $modx->parser->processElementTags('', $fields[$key], false, false, '[[', ']]', array(), $maxIterations);
 			            }
 			        }
 			        
 			        // parse content
 			        if ($parseContent) {
 			            // Parse all cached tags
-			            $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), 10);
+			            $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), $maxIterations);
 			        }
 			        
 			        
@@ -81,11 +82,11 @@ switch($eventName) {
 		        if ($parseAllFields) {
 		            foreach ($fields as $key => $value) {
 		                if ($key == 'content') continue;
-		                $modx->parser->processElementTags('', $fields[$key], true, true, '[[', ']]', array(), 10);
+		                $modx->parser->processElementTags('', $fields[$key], true, true, '[[', ']]', array(), $maxIterations);
 		            }
 		        }
 		        if ($parseContent) {
-		            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), 10);
+		            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), $maxIterations);
 		        }
 			        
 			            
