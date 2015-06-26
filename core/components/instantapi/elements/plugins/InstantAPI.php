@@ -67,7 +67,7 @@ switch($eventName) {
       
 		  if ($page) {
 		    
-		  	$cacheKey = "instantapi/" . $cleanedUri;
+		  	$cacheKey = 'instantapi/' . $modx->context->key . '/' . $cleanedUri;
 		  	
 		  	// check if resource is cacheable
 		  	if ($page->get('cacheable')) {
