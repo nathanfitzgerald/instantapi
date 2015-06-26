@@ -49,13 +49,15 @@ switch($eventName) {
 		  $cleanedUri = str_replace(array('.json','/'),'',$uri); 
 		  $cleanedUri = preg_replace('/\?.*/', '', $cleanedUri);
 
+      $htmlContentType = $modx->getObject('modContentType', array('name' => 'HTML'));
+
       $c = $modx->newQuery('modResource');
       $c->where(array(
         array(
           'uri:IN' => array(
+            $cleanedUri . $htmlContentType->get('file_extensions'),
+            $cleanedUri . '/',
             $cleanedUri,
-            $cleanedUri . '.html' , 
-            $cleanedUri . '/'
           )
         ),
         array(
