@@ -3,7 +3,7 @@ InstantAPI is a plugin that automatically turns any page on your MODX site into 
 Fields are optionally parsed and cached.
 
 Installation
-1. Install the plugin via the MODX repository, and make sure the "OnPageNotFound" event is checked.
+1. Install the plugin via the MODX repository, and make sure the "OnPageNotFound" and "OnDocFormSave" events are checked.
 2. Visit any page on your site, and add ".json" to the end of the URL. The page will return a JSON-formatted string containing all of the page's data.
 
 Options

@@ -32,83 +32,93 @@ switch($eventName) {
 		$cacheExpireTime = $modx->getOption('instantapi.cache_expire_time', $scriptProperties, 0);
 		$maxIterations= (integer) $modx->getOption('parser_max_iterations', null, 10);
 		
-		if (isset($uri_array['path']) && preg_match('/\.json$/i',$uri_array['path'])) {
-		    $cleanedUri = str_replace(array('.json','/'),'',$uri); 
-		    $cleanedUri = preg_replace('/\?.*/', '', $cleanedUri);
-		    $page = $modx->getObject('modResource',array('uri' => $cleanedUri));
-		    if ($page) {
+		if (isset($uri_array['path']) && preg_match('/\.json$/i', $uri_array['path'])) {
+		  $cleanedUri = str_replace(array('.json','/'),'',$uri); 
+		  $cleanedUri = preg_replace('/\?.*/', '', $cleanedUri);
+      
+      $c = $modx->newQuery('modResource');
+      $c->where(array(
+        array(
+          'uri:IN' => array($cleanedUri, $cleanedUri . '.html' , $cleanedUri . '/')
+        ),
+        array(
+          'context_key' => $modx->context->key
+        )
+      ));
+
+		  $page = $modx->getObject('modResource', array('uri' => $cleanedUri));
+
+		  if ($page) {
 		    
-		    	$cacheKey = "instantapi/" . $cleanedUri;
-		    	
-		    	// check if resource is cacheable
-		    	if ($page->get('cacheable')) {
-			    	// get $fields from cache
-			    	$fields = $modx->cacheManager->get($cacheKey);
-		    	}
-		    	
-		    	if ($fields) { // cached version available
-		    	
-		    		$fields['instantAPI'] = "cached";
-		    		$modx->resource =& $page;
-		    	
-		    	} else { // no cached version available
-		    	
-			        $fields = $page->toArray();
-			        
-			        // parse all fields (except content)
-			        if ($parseAllFields) {
-			            foreach ($fields as $key => $value) {
-			                if ($key == 'content') continue;
-			                // Parse all cached tags
-			                $modx->parser->processElementTags('', $fields[$key], false, false, '[[', ']]', array(), $maxIterations);
-			            }
-			        }
-			        
-			        // parse content
-			        if ($parseContent) {
-			            // Parse all cached tags
-			            $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), $maxIterations);
-			        }
-			        
-			        
-			        // put $fields in the modx cache
-			        $modx->cacheManager->set($cacheKey,$fields,$cacheExpireTime);
-			        
-			        // add "uncached" value, since current output is uncached
-			        $fields['instantAPI'] = "uncached";
-		    	}
-		        
-		       
-		        // Parse uncached tags in all fields and content
-		        if ($parseAllFields) {
-		            foreach ($fields as $key => $value) {
-		                if ($key == 'content') continue;
-		                $modx->parser->processElementTags('', $fields[$key], true, true, '[[', ']]', array(), $maxIterations);
-		            }
-		        }
-		        if ($parseContent) {
-		            $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), $maxIterations);
-		        }
-			        
-			            
-		        $mtime= microtime();
-		        $mtime= explode(" ", $mtime);
-				$mtime= $mtime[1] + $mtime[0];
-				$tsum= round(($mtime - $modx->startTime) * 1000, 0) . " ms";
-				
-				$fields['rendertime'] = $tsum;
-		        
-		        $json = $modx->toJSON($fields);
-		        session_write_close();
-		        die($json);
-		    }
-		    else {
-		        $modx->sendForward($error_page);
-		    }
+		  	$cacheKey = "instantapi/" . $cleanedUri;
+		  	
+		  	// check if resource is cacheable
+		  	if ($page->get('cacheable')) {
+			  	// get $fields from cache
+			  	$fields = $modx->cacheManager->get($cacheKey);
+		  	}
+		  	
+		  	if ($fields) { // cached version available
+		  	
+		  		$fields['instantAPI'] = "cached";
+		  		$modx->resource =& $page;
+		  	
+		  	} else { // no cached version available
+		  	
+			      $fields = $page->toArray();
+			      
+			      // parse all fields (except content)
+			      if ($parseAllFields) {
+			          foreach ($fields as $key => $value) {
+			              if ($key == 'content') continue;
+			              // Parse all cached tags
+			              $modx->parser->processElementTags('', $fields[$key], false, false, '[[', ']]', array(), $maxIterations);
+			          }
+			      }
+			      
+			      // parse content
+			      if ($parseContent) {
+			          // Parse all cached tags
+			          $modx->parser->processElementTags('', $fields['content'], false, false, '[[', ']]', array(), $maxIterations);
+			      }
+			      
+			      
+			      // put $fields in the modx cache
+			      $modx->cacheManager->set($cacheKey,$fields,$cacheExpireTime);
+			      
+			      // add "uncached" value, since current output is uncached
+			      $fields['instantAPI'] = "uncached";
+		  	}
+		      
+		     
+		      // Parse uncached tags in all fields and content
+		      if ($parseAllFields) {
+		          foreach ($fields as $key => $value) {
+		              if ($key == 'content') continue;
+		              $modx->parser->processElementTags('', $fields[$key], true, true, '[[', ']]', array(), $maxIterations);
+		          }
+		      }
+		      if ($parseContent) {
+		          $modx->parser->processElementTags('', $fields['content'], true, true, '[[', ']]', array(), $maxIterations);
+		      }
+			      
+			          
+		      $mtime= microtime();
+		      $mtime= explode(" ", $mtime);
+			    $mtime= $mtime[1] + $mtime[0];
+			    $tsum= round(($mtime - $modx->startTime) * 1000, 0) . " ms";
+			
+			    $fields['rendertime'] = $tsum;
+		      
+		      $json = $modx->toJSON($fields);
+		      session_write_close();
+		      die($json);
+		  }
+		  else {
+		      $modx->sendForward($error_page);
+		  }
 		}
-		break;
-	
-	
+    break;
 	
 	case 'OnDocFormSave':
 		$modx->cacheManager->refresh(
