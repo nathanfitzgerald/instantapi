@@ -163,10 +163,10 @@ switch($eventName) {
     break;
 	
 	case 'OnDocFormSave':
-		$modx->cacheManager->refresh(
-			array('default' => 
-				array('instantapi/' . $resource->get("uri"))
-			)
-		);
+    $uri = $resource->get('uri');
+    $cleanedUri = str_replace(array('.json','/'),'',$uri); 
+    $cleanedUri = preg_replace('/\?.*/', '', $cleanedUri);
+    $cacheKey = 'instantapi/' . $resource->get('context_key') . '/' . $cleanedUri;
+    $modx->cacheManager->delete($cacheKey);
 		break;
 }
