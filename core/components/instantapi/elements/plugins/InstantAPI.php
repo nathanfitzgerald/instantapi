@@ -6,7 +6,8 @@
  * A MODX plugin that instantly turns any MODX resource into a JSON feed, just by adding ".json" to the end of the URL
  *
  * @ author Aaron Ladage
- * @ version 1.0.2 - January 22, 2013
+ * @ updated for MODX 2.3.x by Nathan Fitzgerald
+ * @ version 1.0.3 - June 25, 2015
  * 
  * SYSTEM EVENTS:
  *   OnPageNotFound
